@@ -1,0 +1,89 @@
+#!/usr/bin/python
+
+import os
+import sys
+import nltk
+import pyPdf
+import sqlite3
+from PIL import Image
+from ID3 import *
+
+
+tokenizer = nltk.tokenize.RegexpTokenizer(r'\w+')
+home = os.getcwd()+'/Content'
+
+
+found_files = []
+
+
+class engine:
+
+	def __init__(self,keywords,file_name,file_target,file_type,file_metadata,file_content):
+
+		self.keywords = keywords.split(' ')
+		self.file_target = file_target		
+		self.file_name = file_name.replace(' ',',').replace(' ',',').replace('_',',').replace('.',',')
+		self.file_name = self.file_name.split(',')
+		self.file_type = file_type.split(',')
+		self.file_metadata = file_metadata.split(',')
+		self.file_content = file_content.split(',')
+		
+
+	
+	def search(self):
+	
+		weight = 0.000
+		found = False
+
+		print self.file_name
+		for keyword in self.keywords:
+			keyword = keyword.lower()
+			for file_name_keyword in self.file_name:
+				if file_name_keyword.lower()==keyword:
+					found = True
+					weight+=1
+			
+			for file_name_keyword in self.file_metadata:
+				if file_name_keyword.lower()==keyword:
+					found = True
+					weight+=.1
+
+			for file_name_keyword in self.file_content:
+				if file_name_keyword==keyword:
+					found = True
+					weight+=.01
+			
+			if found:
+				global found_files
+				found_files.append([self.file_target,self.file_type,weight])
+			
+			
+			found_files.sort(key=lambda x: x[1],reverse=True)
+
+
+
+def lau_fal(keywords):
+	
+	execfile('Clean')
+	conn = sqlite3.connect('Data.db')
+	conn.text_factory = str
+	db = conn.cursor()
+	data = db.execute('select * from DATA')
+	rows = []
+	for a_line in data:
+		rows.append([a_line[0],a_line[1],a_line[2],a_line[3],a_line[4]])
+
+
+	conn.close()
+
+
+	global found_files
+
+	found_files = []
+	
+	for a_row in rows:
+		print a_row[0]
+		a = engine(keywords,a_row[0],a_row[1],a_row[2],a_row[3],a_row[4])
+		a.search()
+
+	return found_files

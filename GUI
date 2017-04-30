@@ -1,0 +1,218 @@
+#!/usr/bin/env python
+import os
+import sys
+import gtk
+import sqlite3
+import webbrowser
+
+
+execfile("Scraper")
+execfile("Search")
+
+conn = sqlite3.connect('Data.db')
+conn.text_factory = str
+db = conn.cursor()
+
+show = False
+
+class PyApp(gtk.Window):
+
+	def __init__(self):
+		
+		super(PyApp, self).__init__()
+		
+		self.set_border_width(10)
+		self.set_title('Engine Gaadi')
+		self.set_size_request(650, -1)
+		self.set_position(gtk.WIN_POS_CENTER)
+		self.maximize()
+
+		self.table = gtk.Table(20, 12, True)
+		self.entry = gtk.Entry(max=150)
+		self.links = []
+		self.checkbuttons = []
+
+		self.pane_no = 0
+		self.pane_no_label = gtk.Label(self.pane_no)
+		self.found_files = []
+
+		self.GUI(show)
+		
+		
+	def GUI(self,show):
+	 	
+		menubar = gtk.MenuBar()
+		menu = gtk.Menu()
+		themenu = gtk.MenuItem('Menu')
+
+		helpp = gtk.MenuItem('Help')
+		credits = gtk.MenuItem('Credits')
+		exit = gtk.MenuItem('Exit')
+
+		menu.append(helpp)
+		menu.append(credits)
+		menu.append(exit)
+
+		themenu.set_submenu(menu)
+		menubar.append(themenu)
+
+		helpp.connect('activate',self.show_help)
+		credits.connect('activate',self.show_credits)
+		exit.connect('activate',gtk.main_quit)
+	
+		self.table.attach(self.entry, 0, 11, 0, 1)
+		
+		searcher=gtk.Button('Search')
+		searcher.connect('clicked',self.search)
+		self.table.attach(searcher, 11,12,0,1) 
+		
+
+		prev = gtk.Button('Previous',gtk.STOCK_MEDIA_PREVIOUS)
+		prev.connect("clicked",self.decrement)
+		self.table.attach(prev, 5,6,1,2)
+				
+		nxt = gtk.Button('Next',gtk.STOCK_MEDIA_NEXT)
+		nxt.connect("clicked",self.increment)
+		self.table.attach(nxt, 7,8,1,2) 		
+
+
+		self.create_check_box()
+
+		
+		hseparator = gtk.HSeparator()	
+		hs = gtk.HSeparator()
+		vseparator = gtk.VSeparator()	
+		vs = gtk.VSeparator()	
+		self.table.attach(hseparator,1,12,2,3)
+		self.table.attach(vseparator,1,2,2,20)
+		self.table.attach(vs,11,12,2,20)
+		self.table.attach(hs,1,12,19,20)
+		
+		self.table.add(menubar)
+		self.show_all()
+		self.add(self.table)
+		self.connect("destroy", gtk.main_quit)
+
+		self.show_all()
+
+	def scraper(self,otherself):
+		file_chooser = gtk.FileChooserDialog('Select A File',None,gtk.FILE_CHOOSER_ACTION_OPEN,(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL, gtk.STOCK_OK, gtk.RESPONSE_OK))
+
+		response = file_chooser.run()
+		
+		if response == gtk.RESPONSE_OK:
+			scraper(file_chooser.get_filename()).scrape()
+
+
+
+		file_chooser.destroy()
+
+
+
+	def search(self,otherself):
+		
+		self.pane_no = 0
+
+		self.table.attach(gtk.Label(), 2, 9, 3,9)			
+		keywords = self.entry.get_text()
+		
+		results = lau_fal(keywords)
+	
+		self.found_files = []
+		
+		print results
+
+		if True in [check[0].get_active() for check in self.checkbuttons]:
+
+			for check in self.checkbuttons:
+				if check[0].get_active():
+					for result in results:
+						if check[1] in str(result[1]):
+							self.found_files.append(result[0])
+
+		else:
+			for result in results:
+				self.found_files.append(result[0])
+		
+		self.show_pane(0)
+		
+	def show_credits(self,otherself):
+		message = 'CREDITS\nVALAR MORGHULIS'
+
+		messagedialog = gtk.MessageDialog(self, 0, 0, 0, message)
+		messagedialog.run()
+		messagedialog.destroy()
+	
+	def show_help(self,otherself):
+		message = 'CREDITS\nVALAR DAHAEORIS'
+
+		messagedialog = gtk.MessageDialog(self, 0, 0, 0, message)
+		messagedialog.run()
+		messagedialog.destroy()
+
+
+	def show_pane(self,pane_no):
+		
+		for link in self.links:
+			self.table.remove(link)
+		self.links = []
+		
+		self.pane_no_label.set_text(str(self.pane_no+1)+'/'+str(len(self.found_files[:-1])/25+1))
+		self.table.attach(self.pane_no_label,6,7,1,2) 		
+
+		if self.found_files == []:
+			messagedialog = gtk.MessageDialog(self, 0, gtk.MESSAGE_WARNING, gtk.BUTTONS_OK, 'File Not Found')
+			messagedialog.run()
+			messagedialog.destroy()
+		else:
+			s = 0
+			for found_file in self.found_files[pane_no*25:pane_no*25+25]:
+		
+				link = gtk.LinkButton('file://'+found_file,found_file[found_file.rfind('/')+1:])
+				#link = gtk.Button(found_file[found_file.rfind('/')+1:])
+				#def asd(self):
+				#	webbrowser.open('file://'+found_file)
+
+	#			link.connect('clicked',asd)
+				link.props.relief = gtk.RELIEF_NORMAL
+			
+				self.table.attach(link,(s*2)%10+2,(s*2+1)%10+2,(3*(1+s/5)+1),(3*(1+s/5)+3))
+				s+=1
+				self.links.append(link)
+			
+				self.show_all()
+	
+
+	
+	def create_check_box(self):
+			
+		check_box = gtk.VBox()
+		
+		file_types = ['text','image','pdf','audio','video']
+			
+		for file_type in file_types:
+			file_type_select = gtk.CheckButton(file_type)
+			self.table.attach(file_type_select,0,1,file_types.index(file_type)+3,file_types.index(file_type)+4)
+			self.checkbuttons.append([file_type_select,file_type])
+			
+
+
+	def decrement(self,me):
+		
+		if self.pane_no > 0:
+			self.pane_no -= 1
+			self.show_pane(self.pane_no)
+
+
+	def increment(self,me):
+		
+		if self.pane_no != len(self.found_files[:-1])/25:
+			self.pane_no += 1
+			self.show_pane(self.pane_no)
+
+
+PyApp()
+gtk.main()
+conn.commit()
+conn.close()
+

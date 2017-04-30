@@ -1,0 +1,7 @@
+extension_index = [
+		[ 'text' , ['txt'] ],
+		[ 'audio', [] ],
+		[ 'video', [] ],
+		[ 'image', [] ],
+		[ 'pdf'  , [] ],
+]

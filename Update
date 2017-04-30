@@ -1,0 +1,19 @@
+#!/usr/bin/python
+
+import sys,sqlite3
+execfile('Scraper')
+
+
+print sys.argv[1]+sys.argv[3]
+print sys.argv[2]
+
+conn = sqlite3.connect('Data.db')
+conn.text_factory = str
+db = conn.cursor()
+
+if 'CREATE' in sys.argv[2] or 'CLOSE_WRITE' in sys.argv[2] or 'MOVED_TO' in sys.argv[2]:
+	a = scraper('/home/evilgenius/Computer/Code/Project/KU/Engine_Gaadi/'+sys.argv[1]+sys.argv[3])
+	a.scrape()
+
+conn.commit()
+conn.close()

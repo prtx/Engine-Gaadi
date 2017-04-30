@@ -1,0 +1,171 @@
+#!/usr/bin/python
+
+import subprocess
+import re
+import os
+import sys
+import nltk
+import pyPdf
+import magic
+import sqlite3
+from PIL import Image
+from ID3 import *
+
+tokenizer = nltk.tokenize.RegexpTokenizer(r'\w+')
+
+no_of_file =  0
+magic_error = 0
+audio_error = 0
+image_error = 0
+pdf_error = 0
+pmeta_error = 0
+db_error = 0
+
+execfile("Extensions")
+
+class scraper:
+
+
+	def __init__(self,file_target):
+
+
+		self.file_target = file_target
+
+		self.file_name = file_target[file_target.rfind('/')+1:]
+
+		try:
+			self.file_type = magic.from_file(file_target, mime=True)
+
+		except Exception:
+		
+			global magic_error
+			magic_error+=1
+			
+			self.file_type = ''
+			extension = self.file_name[self.file_name.rfind('.')+1:]
+			for extensions in extension_index:
+				if extension in extensions[1]:
+					self.file_type = extensions[0]
+					break
+			print 'python magic error: '+self.file_target
+
+	
+	
+	
+	def content_scan(self,content):
+		
+		file_words = [ nltk.PorterStemmer().stem_word(word).lower() and word.lower()
+			for word in tokenizer.tokenize(content) 
+			if word not in nltk.corpus.stopwords.words('english') and word.isdigit()==False and len(word)>1 ]
+		
+		return sorted(list(set(file_words)))
+
+	
+	def data_entry(self,metadata,file_content):
+
+		try:
+			db.execute('insert into DATA values (?,?,?,?,?)',(self.file_name,self.file_target,self.file_type,','.join(metadata),','.join(file_content)))
+		except Exception:
+			global db_error
+			db_error+=1
+			print 'Database Problem'
+
+	
+	def get_metadata(self):
+		
+		metadata = subprocess.check_output(['exiftool \''+self.file_target+'\''], shell=True)
+		metadata = re.compile(r'\n.*?:').sub(' ',metadata)
+		return metadata
+
+
+
+
+	
+	
+	
+	def scrape(self):
+	
+		if 'text' in self.file_type:	
+			self.search_text()
+		elif 'pdf' in self.file_type:
+			self.search_pdf()
+		elif 'image' in self.file_type:
+			self.search_image()
+		elif 'audio' in self.file_type:
+			self.search_audio()
+		elif 'video' in self.file_type:
+			self.search_audio()
+		elif 'directory' in self.file_type:
+			self.data_entry('','')
+		else:
+			self.data_entry('','')
+
+
+	def search_text(self):
+				
+		the_file = open(self.file_target)
+		file_content = the_file.read().lower()
+
+		if 'html' in self.file_type:
+			file_content = re.compile(r'<.*?>').sub('',file_content)
+
+		self.data_entry('',self.content_scan(file_content))
+
+
+	def search_image(self):
+		
+		try:
+			metadata = self.get_metadata()	
+		except Exception:
+			global image_error
+			image_error+=1
+			print 'Image Problem: '+self.file_target
+			metadata = ''
+
+		self.data_entry(self.content_scan(metadata),'')
+	
+
+	def search_audio(self):
+
+		try:
+			metadata = self.get_metadata()
+		except Exception:
+			global audio_error
+			audio_error+=1
+			print 'Audio Problem: '+self.file_target
+			metadata = ''
+
+		self.data_entry(self.content_scan(metadata),'')
+	
+
+
+
+	def search_pdf(self):
+
+		
+		#try:
+		#	if the_file.isEncrypted:
+	    	#		the_file.decrypt('')
+		#except Exception:
+		#	print 'Pdf decrypt Problem: '+self.file_target
+
+		
+		try:
+			metadata = self.content_scan()
+		except Exception:
+			metadata = ''
+			global pmeta_error
+			pmeta_error+=1
+			print 'Pdf meta Problem: '+self.file_target
+
+		
+		try:
+			file_content = ''
+			file_content = subprocess.check_output(['less \''+self.file_target+'\''], shell=True)
+		except Exception:
+			global pdf_error
+			pdf_error+=1
+			print 'Pdf Problem: '+self.file_target
+
+
+		self.data_entry(metadata,file_content)
