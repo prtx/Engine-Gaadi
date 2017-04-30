@@ -1,0 +1,369 @@
+CHAPTER 1
+INTRODUCTION
+	
+1.1 Background:
+Help Nepal Network(HeNN) is the largest charitable network of Nepal which is running various campaigns to provide assistance in the fields of health and education in rural Nepal. Among various campaigns, E-library is the most ambitious and innovative project launched by HeNN.  It has aim of opening at-least a e-library per district. However, the cost requirement for the resources limits this project. So for the sake of cost management and other technical difficulties, this project has initiated Linux Terminal Server Project (LTSP) such that clients can operate their monitors through a central powerful server, without requiring hard disk for each computer. 
+
+1.2 Present Scenario & Motivation
+Exciting it may seem, it brings database full of files(different formats like text, pdf, mp4 and many others) in gigabytes under a single server. This creates the challenge of finding the required file in no time. This inability to search file can create a huge setback in terms of establishing a LTSP networked system, where searching and locating files through different clients is very important. However, till now there has not been development of such searching system that would meet the aforementioned requirement.
+So, keeping on mind the need for a search system, we got the idea of 'Search Engine' development for improved and comprehensive search. E-library is one of biggest project in the electronic history of Nepal. However, this limiting factor of not having search system would lag the project a big time. So, there comes the system 'E-library Search Engine' under the play. Thus, the legacy of this project was itself sufficient to inspire and motivate us to do this project. 
+
+1.3 Objectives
+
+
+
+
+
+
+
+
+CHAPTER 2
+LITERATUR E REVIEW
+
+Before proceeding further with our 'E-Library Search Engine', we decided to gain some information about the existing search engines in market. So for that purpose we researched about the core concepts and ideas behind them. Obviously, Google and Windows Search caught our sight, so we did some case study in it so that the structure and design of it may be helpful for our project in future.
+
+2.1  Google
+Google is large-scale web search engine which makes heavy use of the structure present in hypertext.It is designed to crawl and index the Web efficiently and display results in ranked manner. Basically google uses following three concepts in its anatomy:-
+Web Crawling: It is the process of browsing through world wide web to update the web contents in the google server so that it can be used for further processing. 
+Indexing:  Google parses out all the links in every web page and stores important information about them in a 'anchor file'.  This file contains enough information to determine where each link points from and to and the text of the link. This is called indexing.
+Searching: The URL resolver reads the anchors file and converts relative URLs into
+absolute URL. It also generates a database of links which are pairs of docIDs. The links database is use to compute PageRanks for all the documents using the 'PageRank Algorithm' especially designed by Google. 
+
+2.2  Windows Search
+Windows Search collectively refers to the indexed search on Windows Vista and later versions of Windows. Windows Search Builds a full-text index of the files on a computer. The time required for the initial creation of this index depends on the amount and type of data to be indexed, and can take up to several hours, but this is a one-time event. Once a file’s contents have been added to this index, Windows Search is able to use the index to search results more rapidly than it would take to search through all the files on the computer. Searches are performed not only on file names, but also on the contents of the file (provided a proper handler for the file type is installed) as well as the keywords, comments and all other forms of meta data that Windows Search recognizes. Windows Search supports natural language searches; so the user can search for things like "photo taken last week" or "email sent from Dave". However, this is disabled by default.	
+ 
+
+Windows Search consists of the following components:
+Indexer:  crawls the file system on initial setup, and then listens for file system notifications to pick up changed files in order to create and maintain the index of data. 
+
+Gatherer:  retrieves the list of URIs that need to be crawled and invokes proper protocol handler to access the store that hosts the URI, and then the proper property-handler (to extract metadata) and IFilter to extract the document text.
+
+Merger: periodically merge the indices. While indexing, the indices are generally maintained in-memory and then flushed to disk after a merge to reduce disk I/O. The metadata is stored in property store, which is a database maintained by the ESE database engine. The text is tokenized and the tokens are stored in a custom database built using Inverted Indices. Apart from the indices and property store, another persistent data structure is maintained: the Gather Queue. The Gather Queue maintains a prioritized queue of URIs that need Indexing.
+
+Backoff Controller: monitors the available system resources, and controls the rate at which the indexer runs.
+
+
+
+
+
+
+
+
+
+
+
+
+
+CHAPTER 3
+SYSTEM ANALYSIS AND ARCHITECTURE
+
+3.1 System Requirements :
+	Software Requirements:
+		1. Platform : Linux
+		2. Programming language:  Python, sqlite3
+		3. Interface Design Tool: Pygtk
+		4. Development tools: Python Shell, Gedit, VI editor
+	
+	Hardware Requirements: 
+	Minimum requirements are  32MB RAM ,400Mhz  CPU, 200MB free disk space     
+
+3.2 System Description:  
+System is a Search Engine which is supposed to search the contents of the local server. A root folder will be provided to the system and it will make the required queries possible with all the possible contents present inside the root folder. The program is accompanied by two phases:
+1. Database Update: Searching the contents directly by tracing every files was in each directories inside root folder was a time taking process as data scraping , meta-data extraction, tokenization, extensions filtering and other processes are to be run simultaneously. So the basic idea to make search efficient was to create a database which shall do all time taking processes like meta-data extraction, data scraping, file type determining. The database consist of the following table:
+File Name
+Target
+File Type
+Meta-data
+Contents
+Once the root directory is given to the program, it will scan through all the possible directories and update the database. Once the database is updated, each change in the server content will be recognized and the database will be re-updated for the changes.
+2. Search Process: It is provided with the interactive search GUI which does the queries for the client. In the section the user inputs the query in the search bar. The string he inputs is then processed, stop words are removed, and stemming is done. The processed string is then looked up in the database. Even file filters are considered to deliver the required results. Finally the results are displayed in the screen in a ranked order.
+3.3 ERT:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+CHAPTER 4
+DISCUSSION
+
+4.1  Programming Language Used
+4.1.1  Python:
+Python is an interpreted, interactive, object-oriented programming language. It incorporates modules, exceptions, dynamic typing, very high level dynamic data types, and classes. Python combines remarkable power with very clear syntax. It has interfaces to many system calls and libraries, as well as to various window systems, and is extensible in C or C++. It is also usable as en extension language for applications that need programming interfaces. Finally, Python is portable across all major hardware and software platforms.
+4.2 Libraries Used
+4.2.1 Pygtk
+Tkinter is a Python binding to the Tk GUI toolkit. Tk is the original GUI library for the Tcl language. Tkinter is implemented as a Python wrapper around a complete Tcl interpreter embedded in the Python interpreter.
+
+
+
+
+
+
+CHAPTER 5
+CODE DESCRIPTION AND PROGRAM FLOW
+5.1 General  Algorithm :
+Database Management:
+1:  Start
+2:  Provide the root folder to the system where the contents are stored
+3:  Probe the current folder.
+	3.1: Look for the files 
+	3.2: If file found, file processing
+		3.2.1: Store file name, file path, and file type in the name, target, type column of 		          database
+		3.2.2: Extract the meta-data and store it in meta-data column of the database
+		3.2.3: If the file is document type, like .odt, .docx, . Html, .pdf , etc. scrape the 		           contents using text processing* and store it in content column of database.
+	3.3: If all files processed or no files found, look for directories
+	3.4: If folders found and unvisited, enter the folder and mark visited
+	3.5: Goto 3:
+	3.6: If no files and folders are found return back from the current directory, make it 	        current directory and goto 3.4:
+	3.7: If current is out of the root, goto 4:
+4:  Stop
+
+Searching:
+1: Start
+2: Read the query as a string 
+3: Process the text*
+4: Search the processed text in the database
+5: If text found in meta-data or content or name column , mark the row as found
+6: If search is made with a filter, see the filetype of the row marked as found, if file type doesn't    
+    match, discard the row and mark it unfound
+7: See the occurrence of the query text in each row
+8: Display the name of the files with its path as hyper link and sort the results in a ranked* way.
+9: Stop
+*text processing: by text processing we mean, scraping the documents, and stemming i.e. stop words, punctuations are removed and useful information are only selected.
+*rank process: The rank weight of the searched file is initially 0. If searched keyword is found in the name column of the database, add 1 to the rank weight. Similarly if found in meta-data or content, add 0.1 and 0.01 respectively and this gives the rank-weight of the file.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+5.2 Flow Chart:
+		fig. Process Flow diagram for database management
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			fig: process flow diagram of the search process
+
+5.3 Code Description:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+CHAPTER 6
+PRODUCT DESCRIPTION AND PERFORMANCE
+4.1 Benefits :
+provides a search interface for the e-library
+searching by file name, type and contents is  possible
+
+4.2 Tasks Accomplished:
+Probing
+File type Determination
+Meta-data mining
+Content Scraping for certain file types
+Text Processing
+Database
+Search
+Basic GUI
+
+
+4.3 Problems encountered:
+It took more time than usual to search for the required file.
+	
+4.4 Solutions:
+To overcome the problem the database was created and the search process was executed on the database
+
+4.5 Works Remaining:
+Ranking Algorithm
+Expand content scraping for various file types
+Improve Database Efficiency
+Improve Search Efficiency
+Auto Database Update
+Improve GUI
+
+
+
+
+
+
+ 
+Work
+           Week
+1 
+2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+Requirement Analysis
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Research
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Coding
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Debugging and Implementation
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Documentation
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Task Accomplished
+Task Remaining
+					fig: Gantt Chart
+
+
+
+
+
+
+
+
+
+
+
+
+
+
